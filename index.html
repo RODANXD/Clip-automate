@@ -1,0 +1,406 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Shorts Uploader</title>
+<style>
+  :root{
+    --bg:#f5f6f8; --card:#ffffff; --text:#1b1d21; --muted:#667085; --line:#e4e7ec;
+    --accent:#e11d48; --accent-ink:#ffffff; --ok:#15803d; --warn:#b45309; --bad:#b91c1c;
+    --soft:#f2f4f7; --radius:12px;
+  }
+  @media (prefers-color-scheme:dark){
+    :root{
+      --bg:#0e1014; --card:#171a21; --text:#e9ebef; --muted:#9aa3b2; --line:#2a2f3a;
+      --accent:#f43f5e; --accent-ink:#ffffff; --ok:#4ade80; --warn:#fbbf24; --bad:#f87171;
+      --soft:#1f232c;
+    }
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--text);
+       font:15px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif}
+  header{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;
+         padding:16px 24px;background:var(--card);border-bottom:1px solid var(--line)}
+  h1{font-size:19px;margin:0}
+  h2{font-size:13px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin:0 0 12px}
+  main{display:grid;grid-template-columns:minmax(320px,430px) 1fr;gap:18px;padding:18px 24px;max-width:1280px;margin:0 auto}
+  @media (max-width:900px){main{grid-template-columns:1fr;padding:14px}}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:16px;margin-bottom:18px}
+  label{display:block;font-weight:600;font-size:13px;margin:12px 0 4px}
+  label:first-of-type{margin-top:0}
+  input[type=text],input[type=number],input[type=datetime-local],select,textarea{
+    width:100%;padding:9px 10px;border:1px solid var(--line);border-radius:8px;
+    background:var(--card);color:var(--text);font:inherit}
+  textarea{min-height:84px;resize:vertical}
+  input:focus,select:focus,textarea:focus{outline:2px solid var(--accent);outline-offset:-1px}
+  .row{display:flex;gap:8px;align-items:center}
+  .row>*{flex:1}
+  .row .shrink{flex:0 0 auto}
+  .hint{color:var(--muted);font-size:12.5px;margin-top:4px}
+  .check{display:flex;gap:8px;align-items:center;font-weight:500;margin-top:10px}
+  .check input{width:auto}
+  .radio{display:block;border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin-top:8px;cursor:pointer;font-weight:500}
+  .radio input{margin-right:8px}
+  .radio small{display:block;color:var(--muted);font-weight:400;margin-left:24px}
+  .radio.sel{border-color:var(--accent);background:var(--soft)}
+  button{font:inherit;font-weight:600;border-radius:9px;border:1px solid var(--line);
+         background:var(--soft);color:var(--text);padding:9px 14px;cursor:pointer}
+  button:hover{filter:brightness(.97)}
+  button.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+  button.danger{color:var(--bad)}
+  button:disabled{opacity:.5;cursor:not-allowed}
+  .pill{display:inline-flex;align-items:center;gap:8px;padding:5px 12px;border-radius:999px;
+        background:var(--soft);font-size:13px;font-weight:600}
+  .dot{width:9px;height:9px;border-radius:50%;background:var(--muted)}
+  .dot.ok{background:var(--ok)} .dot.bad{background:var(--bad)} .dot.warn{background:var(--warn)}
+  .banner{border-radius:10px;padding:12px 14px;background:var(--soft);margin-bottom:12px}
+  .banner b{display:block}
+  .banner.run{border-left:4px solid var(--ok)}
+  .banner.idle{border-left:4px solid var(--muted)}
+  .warn{color:var(--warn);font-size:13px;margin-top:8px}
+  .actions{display:flex;gap:10px;margin-top:16px;flex-wrap:wrap}
+  .actions .primary{flex:1;padding:12px}
+  table{width:100%;border-collapse:collapse;font-size:14px}
+  th{text-align:left;color:var(--muted);font-size:12px;text-transform:uppercase;letter-spacing:.05em;
+     padding:6px 8px;border-bottom:1px solid var(--line)}
+  td{padding:7px 8px;border-bottom:1px solid var(--line)}
+  tr.clickable{cursor:pointer} tr.clickable:hover td{background:var(--soft)}
+  .tag{font-size:12px;font-weight:700;padding:2px 8px;border-radius:999px;background:var(--soft)}
+  .tag.ok{color:var(--ok)} .tag.next{color:var(--accent)}
+  .tablewrap{max-height:340px;overflow:auto}
+  pre#log{margin:0;background:var(--soft);border-radius:10px;padding:12px;height:200px;overflow:auto;
+          font:12.5px/1.5 ui-monospace,Menlo,Consolas,monospace;white-space:pre-wrap;word-break:break-word}
+  video{width:100%;max-height:340px;border-radius:10px;background:#000;margin-top:10px}
+  a{color:var(--accent)}
+  .login{margin:14px 24px 0;max-width:1232px;border:1px solid var(--warn);border-radius:var(--radius);
+         background:var(--card);padding:14px 16px}
+  .login p{margin:6px 0}
+  .login input{margin:6px 0 8px;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12px}
+  @media (min-width:1330px){.login{margin-left:auto;margin-right:auto}}
+  .empty{color:var(--muted);padding:18px;text-align:center}
+</style>
+</head>
+<body>
+<header>
+  <h1>▶ Shorts Uploader</h1>
+  <div class="row" style="flex:0 0 auto">
+    <span class="pill"><span id="authDot" class="dot"></span><span id="authText">Checking YouTube…</span></span>
+    <button id="connectBtn" class="shrink" style="display:none">Connect YouTube</button>
+  </div>
+</header>
+
+<div id="loginBox" class="login" style="display:none">
+  <b>Finish signing in to Google</b>
+  <p>Open this link in the browser where your Google account is signed in (for example Chrome). It will not open by itself.</p>
+  <input type="text" id="loginUrl" readonly>
+  <div class="row">
+    <button id="copyUrl">Copy link</button>
+    <button id="openUrl">Open in this browser</button>
+  </div>
+  <p class="hint">Then choose your account. If Google says the app is not verified, click <b>Advanced</b> → <b>Go to … (unsafe)</b> → <b>Allow</b>. This box disappears when you are connected.</p>
+</div>
+
+<main>
+  <!-- LEFT: settings -->
+  <section>
+    <div class="card">
+      <h2>1 · Clips</h2>
+      <label for="project">Choose the folder with your clips</label>
+      <select id="project"></select>
+      <div id="projectInfo" class="hint"></div>
+    </div>
+
+    <div class="card">
+      <h2>2 · YouTube post details</h2>
+      <label for="title">Title</label>
+      <input type="text" id="title" maxlength="90" placeholder="Zombie Outbreak: Trapped in Rooftop">
+      <label class="check"><input type="checkbox" id="addPart" checked> <span>Add “– Part 1/<span id="partTotal">N</span>” to every title</span></label>
+
+      <label for="description">Description</label>
+      <textarea id="description" placeholder="Write the description shown under every Short…"></textarea>
+
+      <label for="tags">Tags <span style="font-weight:400;color:var(--muted)">(separated by commas)</span></label>
+      <input type="text" id="tags" placeholder="zombie, story, animation">
+
+      <label for="link">Link to your full video <span style="font-weight:400;color:var(--muted)">(optional)</span></label>
+      <input type="text" id="link" placeholder="https://youtu.be/…">
+      <input type="text" id="linkText" style="margin-top:6px" value="Watch the full video:">
+      <div class="hint">This goes into the description. YouTube's “Related video” box under the Short can't be filled by apps; use the “set related video” link in the clips table.</div>
+    </div>
+
+    <div class="card">
+      <h2>3 · When to post</h2>
+      <label>Post one Short every</label>
+      <div class="row">
+        <input type="number" id="intervalValue" min="1" value="6">
+        <select id="intervalUnit">
+          <option value="1">minutes</option>
+          <option value="60" selected>hours</option>
+          <option value="1440">days</option>
+        </select>
+      </div>
+      <div id="rateWarn" class="warn" style="display:none"></div>
+
+      <label for="start">First Short goes out at</label>
+      <input type="datetime-local" id="start">
+
+      <label>How should it post?</label>
+      <label class="radio" id="modeLive"><input type="radio" name="mode" value="live" checked>
+        Upload at the scheduled time
+        <small>The app uploads each Short when its time comes. Keep this app running.</small></label>
+      <label class="radio" id="modeSched"><input type="radio" name="mode" value="scheduled">
+        Upload ahead, YouTube publishes later
+        <small>Uploads your Shorts in advance and lets YouTube publish each at its time. Keep the app running until all are uploaded.</small></label>
+
+      <label for="privacy">Visibility (when it posts)</label>
+      <select id="privacy">
+        <option value="public">Public</option>
+        <option value="unlisted">Unlisted</option>
+        <option value="private">Private</option>
+      </select>
+
+      <div class="actions">
+        <button id="startBtn" class="primary">Start posting</button>
+        <button id="stopBtn" disabled>Stop</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- RIGHT: status -->
+  <section>
+    <div id="banner" class="banner idle"><b id="phase">Idle</b><span id="countdown" class="hint"></span></div>
+
+    <div class="card">
+      <h2>Your clips</h2>
+      <div class="tablewrap">
+        <table>
+          <thead><tr><th>#</th><th>Clip</th><th>Status</th><th>Post time</th></tr></thead>
+          <tbody id="rows"></tbody>
+        </table>
+      </div>
+      <video id="preview" controls playsinline style="display:none"></video>
+      <div class="actions" style="margin-top:12px">
+        <button id="resetBtn" class="danger">Forget upload history for this folder</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Activity</h2>
+      <pre id="log"></pre>
+    </div>
+  </section>
+</main>
+
+<script>
+const $ = id => document.getElementById(id);
+let project = null, rowsData = [], running = false, lastSlot = null, saveTimer = null, nextTime = null;
+
+async function api(path, opts) {
+  const r = await fetch(path, opts);
+  let data = null;
+  try { data = await r.json(); } catch (e) {}
+  if (!r.ok) throw new Error((data && data.error) || r.statusText);
+  return data;
+}
+const post = (p, body) => api(p, {method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify(body || {})});
+const esc = s => String(s).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const pad = n => String(n).padStart(2, "0");
+const toLocalInput = d => `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+const fmt = d => d.toLocaleString([], {weekday:"short", day:"numeric", month:"short", hour:"2-digit", minute:"2-digit"});
+
+/* ---------- form <-> settings ---------- */
+function intervalMin() { return Math.max(1, Math.round((+$("intervalValue").value || 1) * +$("intervalUnit").value)); }
+
+function readForm() {
+  const s = $("start").value;
+  return {
+    title: $("title").value, add_part: $("addPart").checked, description: $("description").value,
+    tags: $("tags").value, link: $("link").value, link_text: $("linkText").value,
+    privacy: $("privacy").value, mode: document.querySelector("input[name=mode]:checked").value,
+    interval_min: intervalMin(), start: s ? new Date(s).toISOString() : null
+  };
+}
+
+function writeForm(c) {
+  $("title").value = c.title || "";
+  $("addPart").checked = c.add_part !== false;
+  $("description").value = c.description || "";
+  $("tags").value = c.tags || "";
+  $("link").value = c.link || "";
+  $("linkText").value = c.link_text || "Watch the full video:";
+  $("privacy").value = c.privacy || "public";
+  document.querySelector(`input[name=mode][value=${c.mode || "live"}]`).checked = true;
+  const m = c.interval_min || 360;
+  if (m % 1440 === 0) { $("intervalValue").value = m / 1440; $("intervalUnit").value = 1440; }
+  else if (m % 60 === 0) { $("intervalValue").value = m / 60; $("intervalUnit").value = 60; }
+  else { $("intervalValue").value = m; $("intervalUnit").value = 1; }
+  syncModeStyle();
+}
+
+function suggestedStart() {
+  let t = new Date(Date.now() + 5 * 60000);
+  if (lastSlot) { const n = new Date(new Date(lastSlot).getTime() + intervalMin() * 60000); if (n > t) t = n; }
+  return t;
+}
+
+function syncModeStyle() {
+  const live = document.querySelector("input[name=mode]:checked").value === "live";
+  $("modeLive").classList.toggle("sel", live);
+  $("modeSched").classList.toggle("sel", !live);
+}
+
+function updateWarn() {
+  const perDay = 1440 / intervalMin(), w = $("rateWarn");
+  if (perDay > 100) {
+    w.style.display = "block";
+    w.textContent = `That is about ${Math.round(perDay)} Shorts per day. YouTube's free upload quota is about 100 per day, so some uploads may pause until the limit resets.`;
+  } else w.style.display = "none";
+}
+
+function scheduleSave() {
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(() => { if (project && !running) post("/api/settings/" + encodeURIComponent(project), readForm()).catch(() => {}); }, 600);
+}
+
+/* ---------- table ---------- */
+function renderRows() {
+  const body = $("rows");
+  if (!rowsData.length) { body.innerHTML = `<tr><td colspan="4" class="empty">No clips yet. Cut your video first (see the instructions).</td></tr>`; return; }
+  const start = $("start").value ? new Date($("start").value) : suggestedStart();
+  const step = intervalMin() * 60000;
+  let j = 0, firstPending = true, html = "";
+  for (const r of rowsData) {
+    let status, when = "";
+    if (r.youtube) {
+      status = `<span class="tag ok">✓ Uploaded</span> <a href="https://youtube.com/shorts/${esc(r.youtube)}" target="_blank" rel="noopener">view</a> · <a href="https://studio.youtube.com/video/${esc(r.youtube)}/edit" target="_blank" rel="noopener" title="Opens YouTube Studio. Use the Related video box to link your full video.">set related video ↗</a>`;
+      if (r.slot) when = fmt(new Date(r.slot));
+    } else {
+      const t = running && r.slot ? new Date(r.slot) : new Date(start.getTime() + j * step);
+      when = fmt(t);
+      status = firstPending ? `<span class="tag next">Next</span>` : `<span class="tag">Waiting</span>`;
+      firstPending = false; j++;
+    }
+    html += `<tr class="clickable" data-clip="${esc(r.name)}"><td>${r.n}</td><td>${esc(r.name)}</td><td>${status}</td><td>${when}</td></tr>`;
+  }
+  body.innerHTML = html;
+  body.querySelectorAll("tr.clickable").forEach(tr => tr.onclick = e => {
+    if (e.target.tagName === "A") return;
+    const v = $("preview"); v.style.display = "block";
+    v.src = `/clips/${encodeURIComponent(project)}/${encodeURIComponent(tr.dataset.clip)}`;
+    v.scrollIntoView({block: "nearest"});
+  });
+}
+
+/* ---------- loading ---------- */
+async function loadProjects(keep) {
+  const list = await api("/api/projects");
+  const sel = $("project");
+  sel.innerHTML = list.length ? list.map(p => `<option value="${esc(p.name)}">${esc(p.name)}  (${p.uploaded}/${p.clips} uploaded)</option>`).join("")
+                              : `<option value="">No clips found</option>`;
+  if (!list.length) { project = null; rowsData = []; renderRows(); $("projectInfo").textContent = "Put your cut clips in the clips folder next to app.py."; return; }
+  if (keep && list.some(p => p.name === keep)) sel.value = keep;
+  await selectProject(sel.value, true);
+}
+
+async function selectProject(name, first) {
+  project = name;
+  const d = await api("/api/project/" + encodeURIComponent(name));
+  rowsData = d.clips; lastSlot = d.last_slot;
+  if (first || !running) {
+    writeForm(d.settings);
+    const saved = d.settings.start ? new Date(d.settings.start) : null;
+    $("start").value = toLocalInput(saved && saved > new Date() ? saved : suggestedStart());
+    if (!$("title").value) $("title").placeholder = name;
+  }
+  const up = rowsData.filter(r => r.youtube).length;
+  $("partTotal").textContent = rowsData.length;
+  $("projectInfo").textContent = `${rowsData.length} clips · ${up} uploaded · ${rowsData.length - up} left`;
+  $("preview").style.display = "none";
+  updateWarn(); renderRows();
+}
+
+/* ---------- status polling ---------- */
+function setLocked(on) {
+  document.querySelectorAll("section:first-of-type input, section:first-of-type select, section:first-of-type textarea")
+    .forEach(el => { el.disabled = on; });
+  $("startBtn").disabled = on; $("stopBtn").disabled = !on; $("resetBtn").disabled = on;
+}
+
+async function poll() {
+  try {
+    const s = await api("/api/status");
+    const was = running; running = s.running; nextTime = s.next_time;
+    if (s.running && s.project && s.project !== project && [...$("project").options].some(o => o.value === s.project)) {
+      $("project").value = s.project; await selectProject(s.project, true);
+    }
+    $("phase").textContent = s.phase || "Idle";
+    $("banner").className = "banner " + (running ? "run" : "idle");
+    const log = $("log"), atEnd = log.scrollTop + log.clientHeight >= log.scrollHeight - 30;
+    log.textContent = s.log.join("\n"); if (atEnd) log.scrollTop = log.scrollHeight;
+    setLocked(running);
+    // login link box
+    const box = $("loginBox");
+    if (s.auth === "working" && s.auth_url) {
+      box.style.display = "block";
+      if ($("loginUrl").value !== s.auth_url) $("loginUrl").value = s.auth_url;
+    } else box.style.display = "none";
+    // auth pill
+    const dot = $("authDot"), txt = $("authText"), btn = $("connectBtn");
+    dot.className = "dot"; btn.style.display = "none";
+    if (s.auth === "connected") { dot.classList.add("ok"); txt.textContent = "YouTube connected"; }
+    else if (s.auth === "working") { dot.classList.add("warn"); txt.textContent = s.auth_msg || "Waiting for login…"; }
+    else if (s.auth === "no_secret") { dot.classList.add("bad"); txt.textContent = "client_secret.json missing"; }
+    else if (s.auth === "error") { dot.classList.add("bad"); txt.textContent = "Login failed: " + s.auth_msg; btn.style.display = ""; btn.textContent = "Try again"; }
+    else { dot.classList.add("warn"); txt.textContent = "YouTube not connected"; btn.style.display = ""; btn.textContent = "Connect YouTube"; }
+    if (project && (running || was)) { // refresh table while running or right after it stops
+      const d = await api("/api/project/" + encodeURIComponent(project));
+      rowsData = d.clips; lastSlot = d.last_slot; renderRows();
+      const up = rowsData.filter(r => r.youtube).length;
+      $("projectInfo").textContent = `${rowsData.length} clips · ${up} uploaded · ${rowsData.length - up} left`;
+    }
+  } catch (e) { $("phase").textContent = "Cannot reach the app. Is app.py still running?"; }
+}
+
+function tickCountdown() {
+  const c = $("countdown");
+  if (!nextTime) { c.textContent = ""; return; }
+  let sec = Math.max(0, Math.round((new Date(nextTime) - Date.now()) / 1000));
+  const h = Math.floor(sec / 3600), m = Math.floor(sec % 3600 / 60), s = sec % 60;
+  c.textContent = "  ·  next action in " + (h ? h + "h " : "") + pad(m) + "m " + pad(s) + "s";
+}
+
+/* ---------- events ---------- */
+$("project").onchange = e => selectProject(e.target.value, true);
+["title","addPart","description","tags","link","linkText","privacy","intervalValue","intervalUnit","start"].forEach(id => {
+  $(id).addEventListener("input", () => { updateWarn(); renderRows(); scheduleSave(); });
+  $(id).addEventListener("change", () => { updateWarn(); renderRows(); scheduleSave(); });
+});
+document.querySelectorAll("input[name=mode]").forEach(r => r.onchange = () => { syncModeStyle(); scheduleSave(); });
+
+$("copyUrl").onclick = async () => {
+  const el = $("loginUrl");
+  try { await navigator.clipboard.writeText(el.value); } catch (e) { el.select(); document.execCommand("copy"); }
+  $("copyUrl").textContent = "Copied!"; setTimeout(() => $("copyUrl").textContent = "Copy link", 1500);
+};
+$("openUrl").onclick = () => window.open($("loginUrl").value, "_blank");
+$("connectBtn").onclick = async () => { try { await post("/api/connect"); poll(); } catch (e) { alert(e.message); } };
+$("startBtn").onclick = async () => {
+  if (!project) return alert("Choose a clips folder first.");
+  const cfg = readForm();
+  if (!cfg.title.trim() && !confirm("The title is empty, so the folder name will be used. Continue?")) return;
+  try { await post("/api/start", {project, settings: cfg}); await selectProject(project, false); poll(); }
+  catch (e) { alert(e.message); }
+};
+$("stopBtn").onclick = async () => { await post("/api/stop"); poll(); };
+$("resetBtn").onclick = async () => {
+  if (!project || !confirm("Forget which clips were uploaded for this folder? Clips will be uploaded again next time (videos already on YouTube stay there).")) return;
+  try { await post("/api/reset/" + encodeURIComponent(project)); await loadProjects(project); } catch (e) { alert(e.message); }
+};
+
+loadProjects().then(poll);
+setInterval(poll, 3000);
+setInterval(tickCountdown, 1000);
+</script>
+</body>
+</html>
